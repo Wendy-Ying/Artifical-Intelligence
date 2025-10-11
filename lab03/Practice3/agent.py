@@ -4,6 +4,7 @@ from multiprocessing import parent_process
 
 import numpy as np
 import queue
+from collections import deque
 from math import sqrt
 
 import numpy.linalg
@@ -51,16 +52,66 @@ class ProblemSolvingAgent:
     
     def DFS(self, obstacles, start_pos, goal_pos):
         path, visited = [], []
-        
+        stack = [start_pos]
+        parents = {start_pos: None}
+        visited_set = set()
+        while stack:
+            current = stack.pop()
+            if current not in visited_set:
+                visited.append(current)
+                visited_set.add(current)
+                if current == goal_pos:
+                    path = self.parents2path(parents, current, start_pos)
+                    return path, visited
+                else:
+                    for neighbor, _ in self.neighbours_of(obstacles, current):
+                        if neighbor not in visited_set and neighbor not in stack:
+                            stack.append(neighbor)
+                            parents[neighbor] = current
         return path, visited
+    
     def BFS(self, obstacles, start_pos, goal_pos):
         path, visited = [], []
-        
+        queue = deque([start_pos])
+        parents = {start_pos: None}
+        visited_set = set()
+        while queue:
+            current = queue.popleft()
+            if current not in visited_set:
+                visited.append(current)
+                visited_set.add(current)
+                if current == goal_pos:
+                    path = self.parents2path(parents, current, start_pos)
+                    return path, visited
+                else:
+                    for neighbor, _ in self.neighbours_of(obstacles, current):
+                        if neighbor not in visited_set and neighbor not in queue:
+                            queue.append(neighbor)
+                            parents[neighbor] = current
         return path, visited
     
     def UCS(self, obstacles, start_pos, goal_pos):
         path, visited = [], []
-        
+        heap = []
+        heapq.heappush(heap, (0, start_pos))  # (cost, node)
+        parents = {start_pos: None}
+        cost_so_far = {start_pos: 0}
+        visited_set = set()
+        while heap:
+            current_cost, current = heapq.heappop(heap)
+            if current not in visited_set:
+                visited.append(current)
+                visited_set.add(current)
+                if current == goal_pos:
+                    path = self.parents2path(parents, current, start_pos)
+                    return path, visited
+                else:
+                    for neighbor, move_cost in self.neighbours_of(obstacles, current):
+                        new_cost = current_cost + move_cost
+                        if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
+                            cost_so_far[neighbor] = new_cost
+                            heapq.heappush(heap, (new_cost, neighbor))
+                            parents[neighbor] = current
         return path, visited
         
     def neighbours_of(self, obstacles, node):
