@@ -26,9 +26,9 @@ class ProblemSolvingAgent:
     def solve_by_searching(self, obstacles, start_pos, goal_pos, algorithm='DFS'):        
         """Let the agent solve problem by searching path on the graph. 
         Args:
-            obstacles (set of bi-tuples): 
+            obstacles (list of bi-tuples): 
                 Obstacles represents the graph information of the grid map, 
-                by a set of points called obstacles.
+                by a list of points called obstacles.
                 At any coordinate, you are allowed to move to 
                 any node nearby that is not in the obstacles.
                 When coding, you can use self.neighbours(obstacles, node) 
@@ -53,9 +53,10 @@ class ProblemSolvingAgent:
     def GBFS(self, obstacles, start_pos, goal_pos):
         path, visited = [], []
         heap = []
-        heapq.heappush(heap, (0, start_pos))
+        heapq.heappush(heap, (self.euclidean_distance(start_pos, goal_pos), start_pos))
         parents = {start_pos: None}
         visited_set = set()
+        seen = {start_pos}
         while heap:
             _, current = heapq.heappop(heap)
             if current not in visited_set:
@@ -65,14 +66,12 @@ class ProblemSolvingAgent:
                     path = self.parents2path(parents, current, start_pos)
                     return path, visited
                 else:
-                    for neighbor, _ in self.neighbours_of(obstacles, current):
-                        if neighbor not in visited_set and neighbor not in heap:
-                            heapq.heappush(heap, (self.heuristic(neighbor, goal_pos), neighbor))
+                    for neighbor, move_cost in self.neighbours_of(obstacles, current):
+                        if neighbor not in visited_set and neighbor not in seen:
                             parents[neighbor] = current
+                            heapq.heappush(heap, (self.euclidean_distance(neighbor, goal_pos), neighbor))
+                            seen.add(neighbor)
         return path, visited
-    
-    def heuristic(self, node, goal_pos):
-        return self.euclidean_distance(node, goal_pos)
     
     def Astar(self, obstacles, start_pos, goal_pos):
         path, visited = [], []
@@ -89,7 +88,7 @@ class ProblemSolvingAgent:
                 new_cost = cost_so_far[current] + cost
                 if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                     cost_so_far[neighbor] = new_cost
-                    priority = new_cost + self.heuristic(neighbor, goal_pos)
+                    priority = new_cost + self.euclidean_distance(neighbor, goal_pos)
                     heapq.heappush(heap, (priority, neighbor))
                     parents[neighbor] = current
         return path, visited
