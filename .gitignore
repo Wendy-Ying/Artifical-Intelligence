@@ -3,5 +3,6 @@
 *.pptx
 *.docx
 *.pyc
+*.csv
 lab03/Practice3/images/*
 lab04/Practice4/images/*
